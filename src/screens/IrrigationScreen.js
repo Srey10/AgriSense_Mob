@@ -25,12 +25,14 @@ export default function IrrigationScreen() {
       <View style={styles.header}>
         <View>
           <View style={styles.logoRow}>
-            <View style={styles.logoIcon}><Text style={styles.logoLeaf}>🌿</Text></View>
+            <View style={styles.logoIcon}>
+              <View style={{width:12, height:12, borderRadius:6, backgroundColor:'#fff'}} />
+            </View>
             <Text style={styles.logoText}>AgroSense</Text>
           </View>
           <Text style={styles.subText}>AI PRECISION FARMING</Text>
         </View>
-        <View style={styles.profileBtn}><Text style={styles.profileIcon}>👤</Text></View>
+        <View style={styles.profileBtn}><Text style={styles.profileBtnText}>PROFILE</Text></View>
       </View>
 
       {/* Map */}
@@ -58,12 +60,12 @@ export default function IrrigationScreen() {
           <TouchableOpacity
             style={[styles.mapToggle, mapMode==='satellite' && styles.mapToggleActive]}
             onPress={() => setMapMode('satellite')}>
-            <Text style={[styles.mapToggleText, mapMode==='satellite' && styles.mapToggleTextActive]}>🛰️  Satellite</Text>
+            <Text style={[styles.mapToggleText, mapMode==='satellite' && styles.mapToggleTextActive]}>SATELLITE</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.mapToggle, mapMode==='soil' && styles.mapToggleActive]}
             onPress={() => setMapMode('soil')}>
-            <Text style={[styles.mapToggleText, mapMode==='soil' && styles.mapToggleTextActive]}>🌱  Soil Map</Text>
+            <Text style={[styles.mapToggleText, mapMode==='soil' && styles.mapToggleTextActive]}>SOIL MAP</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -72,7 +74,6 @@ export default function IrrigationScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
-            <Text>✨</Text>
             <Text style={styles.sectionTitle}>AI Recommendations</Text>
           </View>
           <View style={styles.analysisTag}><Text style={styles.analysisTagText}>ANALYSIS READY</Text></View>
@@ -90,7 +91,6 @@ export default function IrrigationScreen() {
           </View>
         </View>
         <TouchableOpacity style={styles.riskRow}>
-          <Text style={{fontSize:20}}>⚠️</Text>
           <View style={{flex:1}}>
             <Text style={styles.riskLabel}>RISK LEVEL</Text>
             <Text style={styles.riskValue}>Moderate Risk</Text>
@@ -104,12 +104,10 @@ export default function IrrigationScreen() {
         <Text style={styles.overrideTitle}>Manual Overrides</Text>
         <Text style={styles.inputLabel}>CUSTOM VOLUME (LITERS)</Text>
         <View style={styles.inputRow}>
-          <Text>💧</Text>
           <TextInput style={styles.input} value={volume} onChangeText={setVolume} keyboardType="numeric" placeholderTextColor="#94a3b8" />
         </View>
         <Text style={styles.inputLabel}>DURATION (MINUTES)</Text>
         <View style={styles.inputRow}>
-          <Text>⏱️</Text>
           <TextInput style={styles.input} value={duration} onChangeText={setDuration} keyboardType="numeric" placeholderTextColor="#94a3b8" />
         </View>
       </View>
@@ -117,7 +115,7 @@ export default function IrrigationScreen() {
       {/* Execute */}
       <Animated.View style={[styles.execWrap, {transform:[{scale:pulseAnim}]}]}>
         <TouchableOpacity style={styles.execBtn}>
-          <Text style={styles.execText}>▶  Execute Irrigation</Text>
+          <Text style={styles.execText}>Execute Irrigation</Text>
         </TouchableOpacity>
       </Animated.View>
       <View style={{height:30}} />
@@ -133,8 +131,8 @@ const styles = StyleSheet.create({
   logoLeaf: {fontSize:16},
   logoText: {fontSize:18, fontWeight:'800', color:'#0f172a'},
   subText: {fontSize:9, color:'#94a3b8', letterSpacing:1.5, marginTop:2, marginLeft:38},
-  profileBtn: {width:36, height:36, borderRadius:18, backgroundColor:'#f1f5f9', alignItems:'center', justifyContent:'center'},
-  profileIcon: {fontSize:20},
+  profileBtn: {paddingHorizontal:12, paddingVertical:6, borderRadius:8, backgroundColor:'#f1f5f9', alignItems:'center', justifyContent:'center'},
+  profileBtnText: {fontSize:9, fontWeight:'800', color:'#475569'},
   mapView: {height:225, position:'relative', overflow:'hidden', borderRadius:18, margin:16, elevation:4, shadowColor:'#000', shadowOffset:{width:0,height:4}, shadowOpacity:0.12, shadowRadius:8},
   satelliteGrid: {flex:1},
   satRow: {flex:1, flexDirection:'row'},

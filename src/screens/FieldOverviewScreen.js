@@ -2,6 +2,9 @@ import React, {useRef, useEffect} from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Dimensions,
 } from 'react-native';
+import { auth, rtdb } from '../config/firebase';
+import { signOut } from 'firebase/auth';
+import { ref, onValue } from 'firebase/database';
 
 const {width} = Dimensions.get('window');
 
@@ -50,32 +53,41 @@ function BiomassChart() {
 
 export default function FieldOverviewScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [userData, setUserData] = React.useState(null);
+
   useEffect(() => {
     Animated.timing(fadeAnim, {toValue: 1, duration: 600, useNativeDriver: true}).start();
+
+    if (auth.currentUser) {
+      const userRef = ref(rtdb, `users/${auth.currentUser.uid}`);
+      onValue(userRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setUserData(snapshot.val());
+        }
+      }, (err) => console.log('Profile fetch error:', err));
+    }
   }, []);
+
+  const handleLogout = () => {
+    signOut(auth).catch(err => console.log('Logout error:', err));
+  };
 
   return (
     <View style={styles.container}>
-      {/* Sidebar */}
-      <View style={styles.sidebar}>
-        {['⊞','📋','💧','📈','🔧','💬','⚙️'].map((ic, i) => (
-          <TouchableOpacity key={i} style={[styles.sidebarItem, i === 0 && styles.sidebarItemActive]}>
-            <Text style={styles.sidebarIcon}>{ic}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       <Animated.View style={[styles.content, {opacity: fadeAnim}]}>
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>Field{'\n'}Overview</Text>
-            <Text style={styles.headerSub}>Central Valley · Plot A-12</Text>
+            <Text style={styles.headerTitle}>Welcome,{'\n'}{userData?.name || 'Farmer'}</Text>
+            <Text style={styles.headerSub}>
+              {userData?.state || 'Central Valley'} · Plot A-12
+            </Text>
           </View>
           <View style={styles.headerRight}>
-            <View style={styles.langBadge}><Text style={styles.langText}>EN 🌐</Text></View>
-            <TouchableOpacity style={styles.iconBtn}><Text>🔔</Text></TouchableOpacity>
-            <View style={styles.avatarBtn}><Text style={styles.avatarText}>👨‍🌾</Text></View>
+            <View style={styles.langBadge}><Text style={styles.langText}>REGION: EN</Text></View>
+            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+              <Text style={styles.logoutText}>LOG OUT</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -126,11 +138,7 @@ export default function FieldOverviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {flex:1, flexDirection:'row', backgroundColor:'#f0f4f0'},
-  sidebar: {width:56, backgroundColor:'#fff', alignItems:'center', paddingTop:50, paddingBottom:20, gap:4, borderRightWidth:1, borderRightColor:'#e2e8f0', elevation:2},
-  sidebarItem: {width:40, height:40, borderRadius:10, alignItems:'center', justifyContent:'center', marginBottom:4},
-  sidebarItemActive: {backgroundColor:'#dcfce7'},
-  sidebarIcon: {fontSize:18},
+  container: {flex:1, backgroundColor:'#f0f4f0'},
   content: {flex:1, paddingHorizontal:12},
   header: {flexDirection:'row', justifyContent:'space-between', alignItems:'flex-start', paddingTop:50, paddingBottom:14},
   headerTitle: {fontSize:22, fontWeight:'800', color:'#0f172a', lineHeight:28},
@@ -138,9 +146,8 @@ const styles = StyleSheet.create({
   headerRight: {flexDirection:'row', alignItems:'center', gap:8, marginTop:4},
   langBadge: {backgroundColor:'#f1f5f9', borderRadius:8, paddingHorizontal:8, paddingVertical:4},
   langText: {fontSize:12, color:'#475569'},
-  iconBtn: {padding:4},
-  avatarBtn: {width:34, height:34, borderRadius:17, backgroundColor:'#dcfce7', alignItems:'center', justifyContent:'center'},
-  avatarText: {fontSize:18},
+  logoutBtn: {backgroundColor:'#ef444415', borderRadius:8, paddingHorizontal:10, paddingVertical:6, borderWidth:1, borderColor:'#ef444430'},
+  logoutText: {fontSize:11, color:'#ef4444', fontWeight:'700'},
   metricsGrid: {flexDirection:'row', flexWrap:'wrap', gap:10, marginBottom:14},
   metricCard: {width:(width-80-30)/2, backgroundColor:'#fff', borderRadius:16, padding:14, elevation:2},
   badge: {alignSelf:'flex-start', borderRadius:6, paddingHorizontal:6, paddingVertical:2, marginBottom:6},

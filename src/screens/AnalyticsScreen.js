@@ -1,31 +1,43 @@
-import React, {useState} from 'react';
-import {View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator} from 'react-native';
+
 
 const {width} = Dimensions.get('window');
 const TABS = ['Rainfall','Soil Health','Fertilizer'];
 
-function WeatherChart() {
-  const pts = [30,55,45,80,70,90,75];
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function WeatherChart({data}) {
+  if (!data || data.length === 0) return null;
+
+  const temps = data.map(d => d.temp);
+  const days = data.map(d => d.day);
+  const maxTemp = Math.max(...temps, 1);
+  const minTemp = Math.min(...temps);
+
   const chartH = 80;
   const chartW = width - 64;
+
   return (
     <View style={styles.weatherWrap}>
       <View style={[styles.chartCanvas, {height: chartH}]}>
-        {pts.map((p, i) => (
-          <View key={i} style={[styles.chartPoint, {
-            left: (i / (pts.length - 1)) * (chartW - 20) + 8,
-            bottom: (p / 90) * chartH - 4,
-          }]} />
-        ))}
+        {temps.map((p, i) => {
+          const xPos = (temps.length > 1) ? (i / (temps.length - 1)) * (chartW - 20) + 8 : (chartW / 2);
+          const yRange = (maxTemp - minTemp) || 10;
+          const yPos = ((p - minTemp + 5) / (yRange + 10)) * chartH - 4;
+          return (
+            <View key={i} style={[styles.chartPoint, {
+              left: xPos,
+              bottom: yPos,
+            }]} />
+          );
+        })}
       </View>
       <View style={styles.dayRow}>
-        {days.map(d => <Text key={d} style={styles.dayLabel}>{d}</Text>)}
+        {days.map((d, i) => <Text key={i} style={styles.dayLabel}>{d}</Text>)}
       </View>
       <View style={styles.yieldRow}>
         <View style={styles.yieldDot} />
-        <Text style={styles.yieldText}>Predicted Yield Impact: +12%  </Text>
-        <Text style={styles.tempText}>24° / 13°</Text>
+        <Text style={styles.yieldText}>Yield Impact: +12%  </Text>
+        <Text style={styles.tempText}>Avg: {Math.round(data[0].max)}° / {Math.round(data[0].min)}°</Text>
       </View>
     </View>
   );
@@ -81,13 +93,80 @@ function YieldBars() {
 
 export default function AnalyticsScreen() {
   const [tab, setTab] = useState(0);
+  const [weatherData, setWeatherData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [locationName, setLocationName] = useState('Your Location');
+
+  useEffect(() => {
+    fetchWeather();
+  }, []);
+
+  const fetchWeather = async () => {
+    try {
+      setLoading(true);
+      let lat = 28.61; // Default: Delhi
+      let lon = 77.21;
+
+      // Try getting real GPS location
+      try {
+        // Dynamic import to avoid crashing if expo-location is not installed
+        const Location = await import('expo-location').catch(() => null);
+        if (Location) {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+            lat = pos.coords.latitude;
+            lon = pos.coords.longitude;
+            // Reverse geocode for city name
+            const places = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lon });
+            if (places && places.length > 0) {
+              const p = places[0];
+              setLocationName(p.city || p.district || p.region || 'Your Location');
+            }
+          }
+        }
+      } catch (locErr) {
+        console.log('Location unavailable, using Delhi defaults:', locErr.message);
+        setLocationName('Delhi (Default)');
+      }
+
+      // Use Open-Meteo — Accurate, free, no API key needed
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&current_weather=true&timezone=auto`
+      );
+      const json = await response.json();
+
+      if (json.daily) {
+        const formattedData = json.daily.time.slice(0, 5).map((time, i) => {
+          const date = new Date(time);
+          return {
+            day: date.toLocaleDateString('en-US', {weekday: 'short'}),
+            temp: (json.daily.temperature_2m_max[i] + json.daily.temperature_2m_min[i]) / 2,
+            max: json.daily.temperature_2m_max[i],
+            min: json.daily.temperature_2m_min[i],
+          };
+        });
+        setWeatherData(formattedData);
+        setError(null);
+      } else {
+        setError('Weather data unavailable');
+      }
+    } catch (err) {
+      setError('Network error. Please check your connection.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header dashed card */}
       <View style={styles.headerCard}>
         <View style={styles.headerCardInner}>
           <View style={styles.logoRow}>
-            <View style={styles.logoIcon}><Text>🌿</Text></View>
+            <View style={styles.logoIcon}></View>
             <View>
               <Text style={styles.logoText}>AgroSense</Text>
               <Text style={styles.headerSub}>YIELD & CLIMATE RISK</Text>
@@ -97,7 +176,7 @@ export default function AnalyticsScreen() {
             {TABS.map((t,i) => (
               <TouchableOpacity key={t} style={[styles.tabChip, tab===i && styles.tabChipActive]} onPress={() => setTab(i)}>
                 <Text style={[styles.tabChipText, tab===i && styles.tabChipTextActive]}>
-                  {i===0?'🌧 ':i===1?'🌱 ':'🧪 '}{t}
+                  {t}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -111,15 +190,29 @@ export default function AnalyticsScreen() {
           <Text style={styles.cardTitle}>LSTM Weather Forecast</Text>
           <View style={styles.conformTag}><Text style={styles.conformTagText}>80% CONFORMANCE</Text></View>
         </View>
-        <Text style={styles.cardSub}>AI-driven 7-day projection</Text>
-        <WeatherChart />
+        <Text style={styles.cardSub}>AI-driven 5-day projection for {locationName}</Text>
+        
+        {loading ? (
+          <View style={{height: 120, justifyContent: 'center', alignItems: 'center'}}>
+            <ActivityIndicator size="large" color="#22C55E" />
+          </View>
+        ) : error ? (
+          <View style={{height: 120, justifyContent: 'center', alignItems: 'center'}}>
+            <Text style={{color: '#ef4444', fontSize: 12}}>{error}</Text>
+            <TouchableOpacity onPress={fetchWeather} style={{marginTop: 10}}>
+              <Text style={{color: '#22C55E', fontWeight: '600'}}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <WeatherChart data={weatherData} />
+        )}
       </View>
 
       {/* Risk Heatmap */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>GIS Risk Heatmap</Text>
-          <View style={styles.moderateTag}><Text style={styles.moderateTagText}>⚠️ MODERATE RISK</Text></View>
+          <View style={styles.moderateTag}><Text style={styles.moderateTagText}>MODERATE RISK</Text></View>
         </View>
         <RiskHeatmap />
       </View>
@@ -137,11 +230,11 @@ export default function AnalyticsScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Smart Actions</Text>
         {[
-          {icon:'💧', color:'#22C55E', bg:'#dcfce7', title:'Irrigation Recommended', desc:'Sector B soil moisture is 32%. Activate sprinklers tonight at 2:00 AM for optimal absorption.'},
-          {icon:'🐛', color:'#f59e0b', bg:'#fef3c7', title:'Pest Warning', desc:'Satellite thermal imagery detects potential pest infestation in NW cluster. Physical inspection required.'},
+          {icon:null, color:'#22C55E', bg:'#dcfce7', title:'Irrigation Recommended', desc:'Sector B soil moisture is 32%. Activate sprinklers tonight at 2:00 AM for optimal absorption.'},
+          {icon:null, color:'#f59e0b', bg:'#fef3c7', title:'Pest Warning', desc:'Satellite thermal imagery detects potential pest infestation in NW cluster. Physical inspection required.'},
         ].map(a => (
           <View key={a.title} style={[styles.actionCard, {borderLeftColor: a.color}]}>
-            <View style={[styles.actionIcon, {backgroundColor: a.bg}]}><Text style={{fontSize:18}}>{a.icon}</Text></View>
+            <View style={[styles.actionIcon, {backgroundColor: a.bg}]}><View style={{width:8, height:8, borderRadius:4, backgroundColor:a.color}} /></View>
             <View style={{flex:1}}>
               <Text style={styles.actionTitle}>{a.title}</Text>
               <Text style={styles.actionDesc}>{a.desc}</Text>

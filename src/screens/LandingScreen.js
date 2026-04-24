@@ -66,7 +66,7 @@ export default function LandingScreen({navigation}) {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.logoRow}>
-          <View style={styles.logoIcon}><Text style={styles.logoLeaf}>🌿</Text></View>
+          <View style={styles.logoIcon}></View>
           <Text style={styles.logoText}>AgriSense</Text>
         </View>
         <TouchableOpacity style={styles.menuBtn}>
@@ -78,7 +78,7 @@ export default function LandingScreen({navigation}) {
         <View style={styles.heroBorder}>
           <Animated.View style={[styles.heroSection, {opacity: fadeAnim, transform: [{translateY: slideAnim}]}]}>
             <View style={styles.heroBadge}>
-              <Text style={styles.heroBadgeText}>✦  GIS-Centric</Text>
+              <Text style={styles.heroBadgeText}>SPATIAL INTELLIGENCE</Text>
             </View>
             <Text style={styles.heroTitle}>AI Smart Farming{'\n'}Platform</Text>
             <Text style={styles.heroSubtitle}>
@@ -98,19 +98,19 @@ export default function LandingScreen({navigation}) {
 
         <View style={styles.ctaSection}>
           <Animated.View style={{transform: [{scale: pulseBtn}]}}>
-            <TouchableOpacity style={styles.explorBtn} onPress={() => navigation.navigate('Main')}>
-              <Text style={styles.explorBtnText}>Explore Dashboard →</Text>
+            <TouchableOpacity style={styles.explorBtn} onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.explorBtnText}>Get Started</Text>
             </TouchableOpacity>
           </Animated.View>
           <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.loginBtnText}>Farmer Login</Text>
+            <Text style={styles.loginBtnText}>Already have an account? Sign In</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.featuresSection}>
-          <FeatureCard icon="🛰️" title="GIS Intelligence" desc="High-resolution spatial mapping for precision field monitoring." />
-          <FeatureCard icon="🤖" title="AI Analytics" desc="Predictive models for crop health and harvest timing." />
-          <FeatureCard icon="💧" title="Smart Irrigation" desc="Automated watering cycles based on soil moisture sensors." />
+          <FeatureCard icon="" title="GIS Intelligence" desc="High-resolution spatial mapping for precision field monitoring." />
+          <FeatureCard icon="" title="AI Analytics" desc="Predictive models for crop health and harvest timing." />
+          <FeatureCard icon="" title="Smart Irrigation" desc="Automated watering cycles based on soil moisture sensors." />
         </View>
 
         <View style={styles.bottomBanner}>
@@ -162,8 +162,8 @@ const styles = StyleSheet.create({
   loginBtnText: {color: '#94a3b8', fontWeight: '600', fontSize: 15},
   featuresSection: {paddingHorizontal: 16, gap: 11, marginTop: 6},
   featureCard: {flexDirection: 'row', alignItems: 'center', backgroundColor: '#0d1a0e', borderRadius: 16, padding: 16, gap: 14, borderWidth: 1, borderColor: '#1a3a22'},
-  featureIconWrap: {width: 46, height: 46, borderRadius: 13, backgroundColor: '#14532d', alignItems: 'center', justifyContent: 'center'},
-  featureIcon: {fontSize: 23},
+  featureIconWrap: {width: 12, height: 12, borderRadius: 6, backgroundColor: '#22C55E', alignItems: 'center', justifyContent: 'center'},
+  featureIcon: {fontSize: 0},
   featureTitle: {color: '#fff', fontSize: 14, fontWeight: '700', marginBottom: 3},
   featureDesc: {color: '#64748b', fontSize: 12, lineHeight: 17},
   bottomBanner: {margin: 16, backgroundColor: '#0d1a0e', borderRadius: 18, padding: 22, alignItems: 'center', borderWidth: 1, borderColor: '#1a3a22'},
